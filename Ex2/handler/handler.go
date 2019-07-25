@@ -6,6 +6,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// MapHandler is the generic handler for both YAMLHandler and future JSONHandler
 func MapHandler(pathsToUrls map[string]string, fallback http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
@@ -18,6 +19,7 @@ func MapHandler(pathsToUrls map[string]string, fallback http.Handler) http.Handl
 	}
 }
 
+// YAMLHandler parses YAML formatted URL and Path
 func YAMLHandler(yamlBytes []byte, fallback http.Handler) (http.HandlerFunc, error) {
 
 	pathUrls, err := parseYaml(yamlBytes)
@@ -29,7 +31,7 @@ func YAMLHandler(yamlBytes []byte, fallback http.Handler) (http.HandlerFunc, err
 
 	return MapHandler(pathsToUrls, fallback), nil
 }
-func buildMap(pathUrls []pathUrl) map[string]string {
+func buildMap(pathUrls []pathURL) map[string]string {
 	pathsToUrls := make(map[string]string)
 
 	for _, pu := range pathUrls {
@@ -38,8 +40,8 @@ func buildMap(pathUrls []pathUrl) map[string]string {
 	return pathsToUrls
 }
 
-func parseYaml(data []byte) ([]pathUrl, error) {
-	var pathUrls []pathUrl
+func parseYaml(data []byte) ([]pathURL, error) {
+	var pathUrls []pathURL
 	err := yaml.Unmarshal(data, &pathUrls)
 
 	if err != nil {
@@ -48,7 +50,7 @@ func parseYaml(data []byte) ([]pathUrl, error) {
 	return pathUrls, nil
 }
 
-type pathUrl struct {
+type pathURL struct {
 	Path string `yaml:"path"`
 	URL  string `yaml:"url"`
 }
