@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	cyoa "gophercises/Ex3"
@@ -14,15 +13,12 @@ func main() {
 	fmt.Printf("Using the story in %s.\n", *filename)
 
 	f, err := os.Open(*filename)
-
 	if err != nil {
 		panic(err)
 	}
 
-	d := json.NewDecoder(f)
-
-	var story cyoa.Story
-	if err := d.Decode(&story); err != nil {
+	story, err := cyoa.JSONStory(f)
+	if err != nil {
 		panic(err)
 	}
 

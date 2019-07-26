@@ -1,5 +1,22 @@
 package cyoa
 
+import (
+	"encoding/json"
+	"io"
+)
+
+// JSONStory - Parse json format of a story to Story type
+func JSONStory(r io.Reader) (Story, error) {
+	d := json.NewDecoder(r)
+
+	var story Story
+	if err := d.Decode(&story); err != nil {
+		panic(err)
+	}
+
+	return story, nil
+}
+
 // Story - container for entire story.json
 type Story map[string]Chapter
 
