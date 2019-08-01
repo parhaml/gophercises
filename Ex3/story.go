@@ -3,7 +3,9 @@ package cyoa
 import (
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
+	"strings"
 	"text/template"
 )
 
@@ -30,13 +32,14 @@ var defaultHandlerTmpl = `
 
     <ul>
     {{range .Options}}
-      <li><a href=""/{{.Chapter}}">{{.Text}}</li>
+      <li><a href="/{{.Chapter}}">{{.Text}}</li>
     {{end}}
     </ul>
   </body>
 </html>
 `
 
+// NewHandler to run the story
 func NewHandler(s Story) http.Handler {
 	return handler{s}
 }
@@ -46,10 +49,21 @@ type handler struct {
 }
 
 func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	err := tpl.Execute(w, h.s["intro"])
-	if err != nil {
-		panic(err)
+	path := strings.TrimSpace(r.URL.Path)
+	if path == "" || path == "/" {
+		path = "/intro"
 	}
+	path = path[1:]
+
+	if chapter, ok := h.s[path]; ok {
+		err := tpl.Execute(w, chapter)
+		if err != nil {
+			log.Printf("%v", err)
+			http.Error(w, "Something went wrong . . .", http.StatusInternalServerError)
+		}
+		return
+	}
+	http.Error(w, "Chapter not found.", http.StatusNotFound)
 }
 
 // JSONStory - Parse json format of a story to Story type
