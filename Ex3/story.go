@@ -2,11 +2,11 @@ package cyoa
 
 import (
 	"encoding/json"
+	"html/template"
 	"io"
 	"log"
 	"net/http"
 	"strings"
-	"text/template"
 )
 
 func init() {
@@ -81,17 +81,28 @@ var defaultHandlerTmpl = `
 </html>
 `
 
+// HandlerOption as type to pass custom options to handler.
+// See: WithTemplate
 type HandlerOption func(h *handler)
 
+// WithTemplate is the HandlerOption to pass a different
+// story template than what is used by gopher.json
 func WithTemplate(t *template.Template) HandlerOption {
 	return func(h *handler) {
 		h.t = t
 	}
 }
 
+// WithPathFunc - HandlerOption to allow custom paths
+func WithPathFunc(fn func(r, *http.Request) string) HandlerOption {
+	return func(h *handler) {
+		h.pathFn = fn
+	}
+}
+
 // NewHandler to run the story
 func NewHandler(s Story, opts ...HandlerOption) http.Handler {
-	h := handler{s, tpl}
+	h := handler{s, tpl, defaultPathFn}
 	for _, opt := range opts {
 		opt(&h)
 	}
@@ -99,16 +110,21 @@ func NewHandler(s Story, opts ...HandlerOption) http.Handler {
 }
 
 type handler struct {
-	s Story
-	t *template.Template
+	s      Story
+	t      *template.Template
+	pathFn func(r *http.Request) string
 }
 
-func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func defaultPathFn(r *http.Request) string {
 	path := strings.TrimSpace(r.URL.Path)
 	if path == "" || path == "/" {
 		path = "/intro"
 	}
-	path = path[1:]
+	return path[1:]
+}
+
+func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	path := h.pathFn(r)
 
 	if chapter, ok := h.s[path]; ok {
 		err := h.t.Execute(w, chapter)
