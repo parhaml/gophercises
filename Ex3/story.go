@@ -17,7 +17,6 @@ var tpl *template.Template
 
 var defaultHandlerTmpl = `
 <!DOCTYPE html>
-
 <html>
   <head>
     <meta charset="utf-8">
@@ -78,8 +77,7 @@ var defaultHandlerTmpl = `
 		</ul>
 	</page>
   </body>
-</html>
-`
+</html>`
 
 // HandlerOption as type to pass custom options to handler.
 // See: WithTemplate
@@ -94,7 +92,7 @@ func WithTemplate(t *template.Template) HandlerOption {
 }
 
 // WithPathFunc - HandlerOption to allow custom paths
-func WithPathFunc(fn func(r, *http.Request) string) HandlerOption {
+func WithPathFunc(fn func(r *http.Request) string) HandlerOption {
 	return func(h *handler) {
 		h.pathFn = fn
 	}
